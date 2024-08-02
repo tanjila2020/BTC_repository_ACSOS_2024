@@ -21,7 +21,7 @@ Following are the important packages that are required to execute the BTC_M.py, 
 
 ### Note
 -Its better to use the updated version of python. Currently Python 3.9.13 is used.
-- Instead of PIP any other python package manager can be used by writing the respective command instad of PIP.
+-Instead of PIP any other python package manager can be used by writing the respective command instad of PIP.
 -For instance, if conda environment is used then the similar conda commands will be needed. For example, conda install pandas, conda install matplotlib etc. These commands 
 can be easily found with a quick internet search.
 -The futures library is needed to be able to execute the codes given in this repository with threading.
