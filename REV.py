@@ -13,56 +13,13 @@ from munkres import Munkres, print_matrix, make_cost_matrix,  DISALLOWED
 import sys
 from getDegradation import *
 
-##create robot, chargin station and task object
+##create name of robot, chargin station and task class
 class Robot:
-    def __init__(self, original_index, k):
-        self.original_index = original_index
-        self.arrival_period = k
-        self.battery_status = "new"
-        self.cur_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        self.state_of_charge = (round(random.uniform(Ebat, Ebat), 4)) ##to have values upto two decimal points
-        self.initial_deg = 0
-        self.status = "idle"
-        self.task_end_time = None
-        self.allocated_task = None
-        self.charge_start_time = None
-        self.allocated_CS = None
-        self. CS_reaching_time = None
-        self.task_slope = None
-        
-    def __str__(self):
-        return f"Robot {self.original_index}: cur_loc={self.cur_loc}, task_end_time={self.task_end_time}, charge_start_time={self.charge_start_time}, CS_reaching_time={self.CS_reaching_time}, allocated_CS ={self.allocated_CS}, allocated_task ={self.allocated_task}, state_of_charge={self.state_of_charge}, status={self.status}, bat_status ={self.battery_status}"
+    pass
 class ChargingStation:
-    def __init__(self, CS_location, original_index):
-        self.original_index = original_index
-        self.CS_location = CS_location
-        self.CS_status = "free"
-        self.charge_start_time = None
-        self.robot_charging = None
-        self.robot_waiting_to_charge = -1
-        self.cs_slope = round(random.uniform(-3, 3) , 2)
-
-    def __str__(self):
-        return f"ChargingStation {self.original_index}: CS_location={self.CS_location}, CS_status={self.CS_status}, charge_start_time = {self.charge_start_time}, robot_charging = {self.robot_charging}, robot_waiting_to_charge = {self.robot_waiting_to_charge}"
-
+    pass
 class Task:
-    def __init__(self, k, original_index):
-        random.seed(a=None, version=2)
-        self.original_index = original_index
-        self.start_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        self.end_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        while self.start_loc == self.end_loc:
-            self.end_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        self.value = random.randint(task_min, task_max)
-        self.arrival_time = k
-        self.deadline = self.arrival_time + task_deadline
-        self.total_distance_to_cover = manhattan_distance(self.end_loc, self.start_loc)
-        self.status = "active"
-        self.t_slope = round(random.uniform(-3, 3) , 2)
-
-    def __str__(self):
-        return f"Task {self.original_index}: start_loc={self.start_loc}, end_loc={self.end_loc}, value={self.value}, arrival_time={self.arrival_time},  deadline={self.deadline}, total_distance_to_cover={self.total_distance_to_cover}, status={self.status}"
-
+    pass
 #####Functions#######################
 
 ####function to calculate manhattan distance between two points
@@ -278,7 +235,6 @@ def update_parametets(k):
                     if diff_in_r == 0:
                         break
     
-             
     return all_robots, all_CS, all_tasks, state_of_charge_traces              
 
 ####function to update avail_lists
@@ -321,13 +277,10 @@ def calculate_matrix_row(matrix, avail_robots, avail_tasks, r_s, start_row, end_
             # print(f"----to complete task robot need {total_e_to_complete_task},robot will have {robot.state_of_charge - total_e_to_complete_task} left after task")
             if (robot.state_of_charge - total_e_to_complete_task) < lowest_soc:
                 matrix[i][j] = DISALLOWED
-                # print("not enough energy so disallowed")
             else:
                 if total_dis == 0:
                     total_dis = 1
                 matrix[i][j] = avail_tasks[j].value / total_dis
-                # matrix[i][j] = avail_tasks[j].value
-                # print(f"matrix element for robot {robot.original_index} and task {avail_tasks[j].original_index} is {matrix[i][j]}")
 
 # Function to allocate threads and perform parallel computation for the matrix
 def allocate_threads(matrix, avail_robots, avail_tasks, r_s, num_threads):
@@ -392,11 +345,7 @@ def allocation(k, all_robots, all_tasks, avail_robots, avail_tasks, needs_charge
     matrix = [[0 for _ in range(len(avail_tasks))] for _ in range(len(avail_robots))]
     # Call the function to allocate threads using ThreadPoolExecutor
     matrix = allocate_threads(matrix, avail_robots, avail_tasks, r_s, num_threads)
-    ###further tasks after calculating the matrix are written below            
-    ##printing the matrix
     print("------before tunning-matrix:")
-    # for row in matrix:
-    #     print(row) 
     matrix, avail_robots, needs_charge_robot_indexes = remove_disallowed_rows(matrix, avail_robots, needs_charge_robot_indexes)
     matrix, avail_tasks = remove_disallowed_columns(matrix, avail_tasks) 
     print("------after tunning-matrix:")
@@ -487,15 +436,11 @@ def charging_decision(need_charge_indexes, all_robots, all_CS, avail_CS):
                     avail_CS.remove(closest_CS)
                     print(f"---no of avail_cs after allocating each cs:{len(avail_CS)}")
                 else:
-                    # if closest_CS.robot_waiting_to_charge != None:
-                    #     closest_CS.robot_waiting_to_charge = robot_index
-                    # print(f"robot_waiting_to_charge {closest_CS.robot_waiting_to_charge}")
                     print(f"robot {robot.original_index} is matched with occupied CS {closest_CS.original_index}")
                     cs_reaching_time = calc_cs_reaching_time(robot, closest_CS, r_s, k)
                     print(f"robot {robot.original_index} 's cs reaching time to occupied CS {closest_CS.original_index} is {cs_reaching_time}")
                     robot.allocated_CS = closest_CS.original_index
                     if cs_reaching_time == k:
-                        # closest_CS.robots_waiting_to_charge.append(robot_index)
                         attribute_updates = {"CS_status": "occupied", "charge_start_time": k+1}
                         update_object_parameters(closest_CS, attribute_updates, all_CS)
                         robot.status = "going to CS"
@@ -511,7 +456,6 @@ def charging_decision(need_charge_indexes, all_robots, all_CS, avail_CS):
                         robot.cur_loc = closest_CS.CS_location
                         print("robot", robot)
                         print("closest cs_occupied", closest_CS)
-                # need_charge_indexes.remove(rob_index)
                 print(f"need charge rbots list after allocating to robot{need_charge_indexes}")        
     need_charge_indexes = []
     print(f"need charge rbots list after allocting to robot{need_charge_indexes}")  
@@ -520,8 +464,8 @@ def charging_decision(need_charge_indexes, all_robots, all_CS, avail_CS):
 ####function to print avail_lists
 def print_lists(k, robot_list, task_list, cs_list):
     print(f"---Robots in for k = {k}:")
-    for robot in robot_list:
-        print(f"robot: {robot}")
+    # for robot in robot_list:
+    #     print(f"robot: {robot.__dict__}")
     print(f"----Tasks in for k = {k}:")
     count_active_tasks = 0
     for task in task_list:
@@ -531,8 +475,8 @@ def print_lists(k, robot_list, task_list, cs_list):
     # for task in task_list:
     #     print(f"task: {task}")   
     print(f"----CS in for k = {k}:")
-    for cs in cs_list:
-        print(f"cs {cs}")         
+    # for cs in cs_list:
+    #     print(f"cs {cs.__dict__}")         
         
 # Define a function to calculate bat_deg for a robot
 def calculate_bat_deg(robot):
@@ -565,10 +509,12 @@ def load_all_from_json(filename):
         return json.load(file)
 # Load all data
 all_data = load_all_from_json('exp1_data.json')
+robots_data = all_data["robots"]
+charging_stations_data = all_data["charging_stations"]
+tasks_data = all_data["tasks_per_k"]
 
 # Load parameters and extract T
 params = all_data['parameters']
-# T = len(all_data['tasks_per_k'])  # Assuming T is the length of tasks_per_k
 task_min = params.get('task_min', None)  # Default to None if not found
 task_max = params.get('task_max', None)  # Default to None if not found
 no_of_old_robs = params.get('no_of_old_robs', None)
@@ -584,10 +530,20 @@ C = params.get('C', None)
 cs_loc = params.get('cs_loc', None)
 total_area = params.get('total_area', None)
 Ebat = params.get('Ebat', None)
-# T = params.get('T', None)
 # Populate lists with data
-all_robots = [Robot(data['original_index'], data['arrival_period']) for data in all_data['robots']]
-all_CS = [ChargingStation(tuple(data['CS_location']), data['original_index']) for data in all_data['charging_stations']]
+all_robots = []
+for robot_data in robots_data:
+    robot = Robot()
+    for key, value in robot_data.items():
+        setattr(robot, key, value)
+    all_robots.append(robot)
+    
+all_CS = []
+for cs_data in charging_stations_data:
+    cs = ChargingStation()
+    for key, value in cs_data.items():
+        setattr(cs, key, value)
+    all_CS.append(cs)
 
 #######Parameters initialization
 num_threads = 16
@@ -596,15 +552,18 @@ no_of_days = -1
 day_start = 0   ##start period of any new day
 day_end = day_start + periods_per_day - 1  ##end period of any new day
 days_per_month = 1 ###it will be 30 if we consider 30 days
+period_length_sec = params.get('period_length_sec', None)
+r_s = 1.7 * period_length_sec ##in meter/sec or metter/minute according to period puration. the multiplication with period_length is done to convert it according to the decision period
+
+
+
 ### Define constants and variables
 old_deg_min = params.get('old_deg_min', None)
 old_deg_max = params.get('old_deg_max', None)
 new_deg_min = task_min
 new_deg_max =  task_max
-period_length_sec = params.get('period_length_sec', None)
 soc_threshold = 50 ##this is for v_soc calculation
 cpu_frq = 2.26 ## cpu frequency in GHz
-r_s = 1.7 * period_length_sec ##in meter/sec or metter/minute according to period puration. the multiplication with period_length is done to convert it according to the decision period
 rob_speed = 1.6 ###m/s to use in the energy consumption calc
 rob_weight = 20  ##in kg
 gravity_acceleration = 9.8 ##in m/s2
@@ -623,7 +582,6 @@ Charging_rate = Ebat/(Charging_time*3600/period_length_sec) #Wh recharged during
 
 #######old robot soc history extraction
 old_soc_file = params.get('old_soc_file', None)  ###to read previous soc trace of older robots
-# no_of_old_robs = 0  ###read it from csv from old robs
 charge_history_df = pd.read_csv(old_soc_file)
 old_robs = 0
 ###to flag few robots as old
@@ -671,7 +629,6 @@ while k <= T:
         if k == day_end:
             ##updating the start and end day period
             no_of_days +=1
-            # print(f"--starting new day: {no_of_days}--")
             day_start = k  
             day_end = day_start + periods_per_day
             ###calc the bat deg with concurrent threading
@@ -680,21 +637,18 @@ while k <= T:
                 futures = [executor.submit(calculate_bat_deg, robot) for robot in all_robots]
                 # Wait for all threads to complete
                 concurrent.futures.wait(futures)
-            # print(f"---!!!!bat deg values at period: {k} and after day = {no_of_days} is: {bat_deg_traces}")    
         print_lists(k, all_robots, all_tasks, all_CS)
         if k==T:   ###this is to update the soc for the last allocation at T-1
             print("----end of working period----")
             break    
     ###update all_tasks by including the new tasks
-    task_data_for_k = all_data['tasks_per_k'].get(str(k), [])  # Using str(k) because JSON keys are always strings
-    for data in task_data_for_k:
-        task = Task(k, data['original_index'])
-        task.__dict__.update(data)
-        all_tasks.append(task)
-    # print("--new all tasks list after adding new tasks:--")
-    # for task in all_tasks:    
-    #     print(task)
-    # print(f"#####print all lists after parameter updation at the beginning of k={k}")
+    if str(k) in tasks_data:  # Ensure the key exists in the tasks_data dictionary
+        tasks = tasks_data[str(k)]  # Retrieve the list of task dictionaries for k = 3
+        for task_data in tasks:
+            task = Task()
+            for key, value in task_data.items():
+                setattr(task, key, value)
+            all_tasks.append(task)   
     ###create new tasks and update the avail_tasks list                                  
     avail_robots, avail_CS, avail_tasks = update_avail_lists(k) 
     print(f"------print avail lists after making new avail_lists from all lists at the beginning of k={k}")

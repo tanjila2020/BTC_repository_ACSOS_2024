@@ -3,69 +3,22 @@ import json
 import math
 import sys
 import time
-import threading
 import concurrent.futures
 import gc
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from munkres import Munkres, print_matrix, make_cost_matrix,  DISALLOWED
+from munkres import Munkres, make_cost_matrix,  DISALLOWED
 import sys
 from getDegradation import *
 
-##create robot, chargin station and task object
+##create name of robot, chargin station and task class
 class Robot:
-    def __init__(self, original_index, k):
-        self.original_index = original_index
-        self.arrival_period = k
-        self.battery_status = "new"
-        self.cur_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        self.state_of_charge = (round(random.uniform(Ebat, Ebat), 4)) ##to have values upto two decimal points
-        self.initial_deg = 0
-        self.status = "idle"
-        self.task_end_time = None
-        self.allocated_task = None
-        self.charge_start_time = None
-        self.allocated_CS = None
-        self. CS_reaching_time = None
-        self.task_slope = None
-        self.charge_counter = 0
-        
-
-    def __str__(self):
-        return f"Robot {self.original_index}: cur_loc={self.cur_loc}, task_end_time={self.task_end_time}, charge_start_time={self.charge_start_time}, CS_reaching_time={self.CS_reaching_time}, allocated_CS ={self.allocated_CS}, allocated_task ={self.allocated_task}, state_of_charge={self.state_of_charge}, status={self.status}, bat_status ={self.battery_status}, charge_counter ={self.charge_counter}"
-
+    pass
 class ChargingStation:
-    def __init__(self, CS_location, original_index):
-        self.original_index = original_index
-        self.CS_location = CS_location
-        self.CS_status = "free"
-        self.charge_start_time = None
-        self.robot_charging = None
-        self.robot_waiting_to_charge = -1
-        self.cs_slope = round(random.uniform(1, 4) , 2)
-
-    def __str__(self):
-        return f"ChargingStation {self.original_index}: CS_location={self.CS_location}, CS_status={self.CS_status}, charge_start_time = {self.charge_start_time}, robot_charging = {self.robot_charging}, robot_waiting_to_charge = {self.robot_waiting_to_charge}"
-
+    pass
 class Task:
-    def __init__(self, k, original_index):
-        random.seed(a=None, version=2)
-        self.original_index = original_index
-        self.start_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        self.end_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        while self.start_loc == self.end_loc:
-            self.end_loc = (random.randint(0, total_area), random.randint(0, total_area))
-        self.value = random.randint(task_min, task_max)
-        self.arrival_time = k
-        self.deadline = self.arrival_time + task_deadline
-        self.total_distance_to_cover = manhattan_distance(self.end_loc, self.start_loc)
-        self.status = "active"
-        self.t_slope = round(random.uniform(-3, 3) , 2)
-
-    def __str__(self):
-        return f"Task {self.original_index}: start_loc={self.start_loc}, end_loc={self.end_loc}, value={self.value}, arrival_time={self.arrival_time},  deadline={self.deadline}, total_distance_to_cover={self.total_distance_to_cover}, status={self.status}"
-
+    pass
 #####Functions#######################
 #for getting v_soc value for any energy level value and and any selected threshold
 def piecewise_linear(input_value, threshold, max_soc):
@@ -207,26 +160,6 @@ def alternate_munkres(matrix):
     
     return selected_robots, total
     
-###munkres function 
-def munkres_func(matrix):
-    print("-----in munkres function")
-    cost_matrix = make_cost_matrix(matrix, lambda cost: (- cost) if
-                                      (cost != DISALLOWED) else DISALLOWED)
-    m = Munkres()
-    indexes = m.compute(cost_matrix)
-    selected_robot = [i for i, j in indexes]
-    selected_col = [lis[-1] for lis in indexes]
-    res = {selected_robot[i]: selected_col[i] for i in range(len(selected_robot))}
-    print("----end of munkres results is", res)
-    # print_matrix(matrix, msg='Highest profit through this matrix:')
-    total = 0
-    for row, column in indexes:
-        value = matrix[row][column]
-        total += value
-        # print(f'({row}, {column}) -> {value}')
-    print(f'----total profit={total}')
-    return res, total
-
 ###function to update parameters######
 def update_parameters(k):
     for robot in all_robots:
@@ -258,15 +191,12 @@ def update_parameters(k):
                     charge_loc = all_CS[robot.allocated_CS].CS_location
                     robot.cur_loc = charge_loc
                     robot.allocated_task = None
-                    #robot.charge_start_time = None
         elif robot.status == "charging":  ###this is for if robot is charging
                 if robot.state_of_charge <= highest_soc:
                     robot.state_of_charge += Charging_rate
                     robot.state_of_charge = min(highest_soc, robot.state_of_charge)
                     state_of_charge_traces[robot.original_index].append(robot.state_of_charge)
                     if robot.state_of_charge == highest_soc:
-                        # robot.state_of_charge = robot.state_of_charge
-                        # state_of_charge_traces[robot.original_index].append(robot.state_of_charge)
                         robot.status = "idle"
                         robot.charge_start_time = None
                         all_CS[robot.allocated_CS].CS_status = "free"
@@ -277,10 +207,7 @@ def update_parameters(k):
                 robot.state_of_charge = max(0, robot.state_of_charge)
                 state_of_charge_traces[robot.original_index].append(robot.state_of_charge)
                 if k == robot.CS_reaching_time:
-                    # robot.state_of_charge = robot.state_of_charge
-                    # state_of_charge_traces[robot.original_index].append(robot.state_of_charge)
                     robot.status = "idle"
-                    # robot.CS_reaching_time = None
     return all_robots, all_CS, all_tasks, state_of_charge_traces              
 
 ####function to update avail_lists
@@ -323,7 +250,6 @@ def calculate_matrix_row(matrix, avail_robots, avail_tasks, avail_CS, r_s, old_d
                 total_e_to_complete_task = total_time_required * energy_consumption
                 if robot.state_of_charge < total_e_to_complete_task:
                     matrix[i][j] = None
-                    # print("not enough energy to execute task!!!")    
                 else:
                     # min_distance = float('inf')  # Initialize with a large value, its the distance to reach the closet CS
                     max_distance = float('-inf')
@@ -336,26 +262,16 @@ def calculate_matrix_row(matrix, avail_robots, avail_tasks, avail_CS, r_s, old_d
                         time_2_reach_CS = 1
                     least_required_e_to_reach_cs = time_2_reach_CS * fixed_energy_consumption   ##calc the amount of e to reach to the fathest CS
                     total_e_required = total_e_to_complete_task + least_required_e_to_reach_cs                    
-                    # future_soc_trace = create_future_SoC_trace_task(prev_trace, total_time_required, energy_consumption)
-                    # energy_after_completing_task = future_soc_trace[-1]
                     if total_e_required > robot.state_of_charge:
                         matrix[i][j] = None
                         print("energy is not enough to reach nearest cs!!!!")
                     else:
                         future_soc_trace = create_future_SoC_trace_task(prev_trace, total_time_required, energy_consumption)        
                         deg = degradation_calc(future_soc_trace, robot.initial_deg)
-                        # print(f"--deg for rob {robot.original_index} to task {avail_tasks[j].original_index}: {deg}")
-                        # q1 = min_max_scaling(deg, old_deg_min, old_deg_max, new_deg_min, new_deg_max)
                         scaled_deg = scale_value(deg, old_deg_min, old_deg_max)
-                        # print(f"--deg after scaling: {q1*deg}")
-                        # print(f"--deg after scaling: {scaled_deg}")
                         value_of_task = avail_tasks[j].value
-                        # print(f"--value of task: {value_of_task}")
                         scaled_task_val  = scale_value(value_of_task, task_min, task_max)
-                        # print(f"value of task after scaling: {scaled_task_val}")
-                        #matrix[i][j] = (avail_tasks[j].value) - (q1 * deg)
                         matrix[i][j] = scaled_task_val - (q1 * scaled_deg)
-                        # matrix[i][j] = round(matrix[i][j], 4)
                         print("matrix for task :", matrix[i][j])    
             elif j < len(avail_tasks) + len(avail_CS):  ###to calc utility for R to CS
                 if robot.state_of_charge >= soc_threshold:
@@ -381,21 +297,12 @@ def calculate_matrix_row(matrix, avail_robots, avail_tasks, avail_CS, r_s, old_d
                         prev_trace = get_charge_trace(robot, k)
                         future_soc_trace = create_future_SoC_trace_charge_idle(prev_trace, fixed_energy_consumption, time_to_reach_CS, recharge_dur, energy_consumption_while_idle, op = "charge")
                         deg = degradation_calc(future_soc_trace, robot.initial_deg)
-                        # print(f"--deg for rob {robot.original_index} to CS {avail_CS[j - len(avail_tasks)].original_index}: {deg}")
-                        # q2 = min_max_scaling(deg, old_deg_min, old_deg_max, new_deg_min, new_deg_max)
                         scaled_deg = scale_value(deg, old_deg_min, old_deg_max)
                         ###new addition
                         scaled_deg = 1 - scaled_deg
-                        # if len(avail_tasks) == 0:
-                        #     scaled_deg = 1 - scaled_deg
-                        # print(f"--deg after scaling: {scaled_deg}")
                         robot_soc = robot.state_of_charge
                         v_soc = piecewise_linear(robot_soc, soc_threshold, Ebat)
-                        # print(f"-- v_soc for charge: {v_soc}")
-                        ##matrix[i][j] = avail_CS[j - len(avail_tasks)].CS_location
-                        # matrix[i][j] = - (q2 *deg * v_soc)
                         matrix[i][j] = - (q2 * scaled_deg * v_soc)
-                        # matrix[i][j] = round(matrix[i][j], 4)
                         print(f"--utility for charge: {matrix[i][j]}")    
                     else:
                         print("!!!! not eneough energy to go to this CS, so disallowed")
@@ -422,7 +329,6 @@ def allocate_threads(matrix, avail_robots, avail_tasks, avail_CS, r_s, old_deg_m
                 avail_tasks,
                 avail_CS,
                 r_s,
-                # energy_consumption,
                 old_deg_min,
                 old_deg_max,
                 task_min,
@@ -473,7 +379,6 @@ def allocation(k, all_robots, all_CS, all_tasks, avail_robots, avail_CS, avail_t
             all_tasks[task.original_index].status = "allocated"
             if all_robots[robot.original_index].state_of_charge > lowest_soc:
                 all_robots[robot.original_index].charge_counter = 0
-            # avail_robots.remove(robot)
             print(f"----Robot {robot.original_index} matched with Task {task.original_index}")
         # If matched with a charging station
         elif col_index < len(avail_tasks) + len(avail_CS):
@@ -529,14 +434,11 @@ def allocation(k, all_robots, all_CS, all_tasks, avail_robots, avail_CS, avail_t
                 if preferred_CS_index is not None:
                     preferred_CS = all_CS[preferred_CS_index]
                     dis_to_reach = manhattan_distance(robot.cur_loc, preferred_CS.CS_location)
-                    # print("preferred CS's distance is", dis_to_reach)
                     time_to_reach = round(dis_to_reach/r_s)
                     if time_to_reach == 0:
                         time_to_reach = 1
                     all_robots[robot.original_index].CS_reaching_time  = k + time_to_reach
-                    # print(f"--!!--cs reaching time of that robot {all_robots[robot.original_index]} is {all_robots[robot.original_index].CS_reaching_time}")
                     all_robots[robot.original_index].cur_loc  = preferred_CS.CS_location
-                    # print(f"robot's new loc is {all_robots[robot.original_index].cur_loc}")
                     
                     
     return all_robots, all_CS, all_tasks, total
@@ -546,7 +448,7 @@ def allocation(k, all_robots, all_CS, all_tasks, avail_robots, avail_CS, avail_t
 def print_lists(k, robot_list, task_list, cs_list):
     print(f"---Robots in for k = {k}:")
     # for robot in robot_list:
-    #     print(f"robot: {robot}")
+    #     print(f"robot: {robot.__dict__}")
     print(f"----Tasks in for k = {k}:")
     count_active_tasks = 0
     for task in task_list:
@@ -554,10 +456,10 @@ def print_lists(k, robot_list, task_list, cs_list):
             count_active_tasks += 1
     print("----no of active tasks", count_active_tasks)
     # for task in task_list:
-    #     print(f"task: {task}")   
+    #     print(f"task: {task.__dict__}")   
     print(f"----CS in for k = {k}:")
     # for cs in cs_list:
-    #     print(f"cs {cs}")         
+    #     print(f"cs {cs.__dict__}")         
         
 # Define a function to calculate bat_deg for a robot
 def calculate_bat_deg(robot):
@@ -589,10 +491,12 @@ def load_all_from_json(filename):
         return json.load(file)
 # Load all data
 all_data = load_all_from_json('exp1_data.json')
+robots_data = all_data["robots"]
+charging_stations_data = all_data["charging_stations"]
+tasks_data = all_data["tasks_per_k"]
 
 # Load parameters and extract T
 params = all_data['parameters']
-# T = len(all_data['tasks_per_k'])  # Assuming T is the length of tasks_per_k
 task_min = params.get('task_min', None)  # Default to None if not found
 task_max = params.get('task_max', None)  # Default to None if not found
 no_of_old_robs = params.get('no_of_old_robs', None)
@@ -611,10 +515,21 @@ total_area = params.get('total_area', None)
 Ebat = params.get('Ebat', None)
 lowest_soc = params.get('lowest_soc', None)
 
-# T = params.get('T', None)
 # Populate lists with data
-all_robots = [Robot(data['original_index'], data['arrival_period']) for data in all_data['robots']]
-all_CS = [ChargingStation(tuple(data['CS_location']), data['original_index']) for data in all_data['charging_stations']]
+all_robots = []
+for robot_data in robots_data:
+    robot = Robot()
+    for key, value in robot_data.items():
+        setattr(robot, key, value)
+    all_robots.append(robot)
+    
+all_CS = []
+for cs_data in charging_stations_data:
+    cs = ChargingStation()
+    for key, value in cs_data.items():
+        setattr(cs, key, value)
+    all_CS.append(cs)
+
 
 #######Parameters initialization
 num_threads = 16
@@ -623,31 +538,20 @@ no_of_days = -1
 day_start = 0   ##start period of any new day
 day_end = day_start + periods_per_day - 1  ##end period of any new day
 days_per_month = 1 ###it will be 30 if we consider 30 days
+period_length_sec = params.get('period_length_sec', None)
+r_s = 1.52 * period_length_sec ##in meter/sec or metter/minute according to period puration. the multiplication with period_length is done to convert it according to the decision period
 ###no of robot needed calculation
 # demand_to_meet = 1 ###read how much percentage of the total demand we have to meet to calc how many no of robots we need, 1 means 100%
 ### Define constants and variables
-# task_deadline = 3
 q1 = params.get('q1', None)##multiplicative weight with bat deg when calculating robot to task utility
 q2 = params.get('q2', None)
 q3 = 1
-# cs_loc =5    #total no of CS locations
-# total_area = 2000 ###meter square assuming each small cell is 1m sq. in area
-# task_min = 5
-# task_max = 50  ##range of the task profits
-# old_deg_min = 0.0000098
-# old_deg_min = 0.00001
-# old_deg_max = 0.1   ##range of the battery degradation value
 old_deg_min = params.get('old_deg_min', None)
 old_deg_max = params.get('old_deg_max', None)
 new_deg_min = task_min
 new_deg_max =  task_max
-period_length_sec = params.get('period_length_sec', None)
-# period_length_sec = 60 ## period length in second (600 = 10 min, 300 = 5 min, 60 = 1min)
-# soc_threshold = 50 ##this is for v_soc calculation
 soc_threshold = params.get('soc_threshold', None) ##this is for v_soc calculation
 cpu_frq = 2.26 ## cpu frequency in GHz
-r_s = 1.52 * period_length_sec ##in meter/sec or metter/minute according to period puration. the multiplication with period_length is done to convert it according to the decision period
-# r_s = 2.6 *period_length_sec ##using this speed to have less time to execute tasks
 rob_speed = 1.6 ###m/s to use in the energy consumption calc
 rob_weight = 20  ##in kg
 gravity_acceleration = 9.8 ##in m/s2
@@ -656,16 +560,12 @@ fixed_energy_consumption = round((power_consumption * period_length_sec/3600),8)
 print("---fixed energy comsumption for 1 min period,", fixed_energy_consumption)
 energy_consumption_while_idle = params.get('energy_consumption_while_idle', None)
 highest_soc = params.get('highest_soc', None)# Battery capacity (Wh) for smaller battery
-# lowest_soc = params.get('lowest_soc', None)# Battery capacity (Wh) for smaller battery
 Charging_time = 0.75 # hrs to completely recharge the battery
 Charging_rate = Ebat/(Charging_time*3600/period_length_sec) #Wh recharged during an entire period in charging mode
-# Charging_rate = 3   ## for testing with small simple value
 
 #######old robot soc history extraction
-# old_soc_file = 'soc_trace_6.2%_deg.csv'  ###to read previous soc trace of older robots
 old_soc_file = params.get('old_soc_file', None)
 
-# no_of_old_robs = 0  ###read it from csv from old robs
 charge_history_df = pd.read_csv(old_soc_file)
 old_robs = 0
 ###to flag few robots as old
@@ -707,7 +607,6 @@ while k <= T:
     if k>0:
     ###call the function to update robot energies, status and locations
         all_robots, all_CS, all_tasks, state_of_charge_traces = update_parameters(k) 
-        # print(f"#####print all lists after parameter updation at the beginning of k={k}")        
         ####---new addition for per day result storage---#####
         if k == day_end:
             ##updating the start and end day period
@@ -721,22 +620,22 @@ while k <= T:
                 futures = [executor.submit(calculate_bat_deg, robot) for robot in all_robots]
                 # Wait for all threads to complete
                 concurrent.futures.wait(futures)
-            # print(f"---!!!!bat deg values at period: {k} and after day = {no_of_days} is: {bat_deg_traces}")    
         # print_lists(k, all_robots, all_tasks, all_CS)
         if k==T:   ###this is to update the soc for the last allocation at T-1
             print("----end of working period----")
             break    
     ###update all_tasks by including the new tasks
-    task_data_for_k = all_data['tasks_per_k'].get(str(k), [])  # Using str(k) because JSON keys are always strings
-    for data in task_data_for_k:
-        task = Task(k, data['original_index'])
-        task.__dict__.update(data)
-        all_tasks.append(task)
-    # print(f"#####print all lists after parameter updation at the beginning of k={k}")
+    if str(k) in tasks_data:  # Ensure the key exists in the tasks_data dictionary
+        tasks = tasks_data[str(k)]  # Retrieve the list of task dictionaries for k = 3
+        for task_data in tasks:
+            task = Task()
+            for key, value in task_data.items():
+                setattr(task, key, value)
+            all_tasks.append(task)    
+
     ###create new tasks and update the avail_tasks list                                  
     avail_robots, avail_CS, avail_tasks = update_avail_lists(k) 
     print(f"------print avail lists after making new avail_lists from all lists at the beginning of k={k}")
-    # print_lists(k, avail_robots, avail_tasks, avail_CS)       
     ####call allocation####
     if len(avail_robots) != 0:
         alloc_start = time.time() 
@@ -749,7 +648,6 @@ while k <= T:
         per_round_allocation_time.append(total_per_round_alloc)        
     else:
         print("!!!no avail robots, so no allocatin was called, just updating k!!! ")
-    # print_lists(k, all_robots, all_tasks, all_CS)
     del avail_tasks
     del avail_robots
     del avail_CS
@@ -843,7 +741,7 @@ if max_no_of_days == 1:
     fig, ax = plt.subplots()
 
     for robot_index, charges in soc_trace_percentage.items():
-        plt.plot(range(0,T+1), charges, label=f'AMR {robot_index}')
+        plt.plot(range(0,T+1), charges, label=f'AGR {robot_index}')
     plt.axhline(y=(highest_soc / Ebat) * 100, color='r', linestyle='-', label="Emax")
     plt.xlim([0, T+1])
     plt.ylim([0, Ebat+1]) 
