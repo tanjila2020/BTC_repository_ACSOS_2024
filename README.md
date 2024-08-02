@@ -18,15 +18,19 @@ Following are the important packages that are required to execute the BTC_M.py, 
 | [munkres](https://pypi.org/project/munkres/) | `pip install munkres` |
 | [futures](https://pypi.org/project/futures/) | `pip install futures` |
 
-
 ### Note
 -Its better to use the updated version of python. Currently Python 3.9.13 is used.
 -Instead of PIP any other python package manager can be used by writing the respective command instad of PIP.
+
 -For instance, if conda environment is used then the similar conda commands will be needed. For example, conda install pandas, conda install matplotlib etc. These commands 
 can be easily found with a quick internet search.
+
 -The futures library is needed to be able to execute the codes given in this repository with threading.
+
 -The rainflow model has been integrated by adding the two files named 'BatteryDegradation.py' and 'getDegradation.py'. Make sure these two files are in the same folder with the other files.
+
 -Any other battery degradation model can be applied by replacing the getDegradation.py file with respective model codes and feeding the state of charge traces.
+
 -Most of the functions are the same across the four approaches except for the calculate_matrix_rows() which builds the bipartite graph by calculating
 utilities described in the paper and the allocation() which updates the parameters according to the allocation decision. The BTC-M uses the munkres() function to get the optimal allocation where as the BTC-G uses alternate_munkres() function
 which is actually the greedy selection to find a suboptimal allocation solution.
