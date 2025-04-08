@@ -141,7 +141,7 @@ max_cs_counter = 3
 Ebat = 111.0
 highest_soc = round(0.8 * Ebat)
 lowest_soc = round(0.20 * Ebat)
-soc_threshold = 50
+soc_threshold = round(0.5 * Ebat)
 period_length_sec = 60
 energy_consumption_while_idle = round((3.514 * period_length_sec / 3600), 8)
 
